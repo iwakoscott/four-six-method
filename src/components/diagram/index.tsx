@@ -40,24 +40,39 @@ export type PourDiagramProps = {
 function init(amountPerPour: number) {
   return {
     0: amountPerPour,
-    1: amountPerPour
+    1: amountPerPour,
+    2: amountPerPour,
+    3: amountPerPour,
+    4: amountPerPour,
+    5: 0
   }
 }
 
 type Action =
   | {
-      type: "UPDATE_POUR"
+      type: "ADD_TO_POUR"
       updates: Array<number>
     }
   | { type: "RESET"; amount: number }
+  | { type: "UPDATE_POUR"; updates: Array<number | undefined> }
 
 export const PourDiagram: React.FC<PourDiagramProps> = ({ amountPerPour }) => {
   const [ASRatioValue, setASRatioValue] = useState("")
   const [strengthValue, setStrengthValue] = useState("0")
-  const [pours, setPours] = useReducer(
+  const [pours, dispatch] = useReducer(
     (prev: Record<number, number>, action: Action) => {
       switch (action.type) {
         case "UPDATE_POUR":
+          return {
+            ...prev,
+            ...action.updates.reduce((acc, next, idx) => {
+              if (typeof next !== "undefined") {
+                acc[idx] = next
+              }
+              return acc
+            }, {} as Record<number, number>)
+          }
+        case "ADD_TO_POUR":
           return {
             ...prev,
             ...action.updates.reduce((acc, next, idx) => {
@@ -75,58 +90,96 @@ export const PourDiagram: React.FC<PourDiagramProps> = ({ amountPerPour }) => {
   )
 
   useEffect(() => {
-    setPours({ type: "RESET", amount: amountPerPour })
+    dispatch({ type: "RESET", amount: amountPerPour })
     setASRatioValue("")
     setStrengthValue("0")
   }, [amountPerPour])
 
   useEffect(() => {
     const value = Number(ASRatioValue)
-    setPours({ type: "UPDATE_POUR", updates: [value, -1 * value] })
+    dispatch({ type: "ADD_TO_POUR", updates: [value, -1 * value] })
   }, [ASRatioValue])
 
-  const renderLastSixty = () => {
+  useEffect(() => {
     const total = amountPerPour * 3
+    switch (strengthValue) {
+      case "-1":
+        dispatch({
+          type: "UPDATE_POUR",
+          updates: [undefined, undefined, total / 2, total / 2]
+        })
+        break
+      case "0":
+        dispatch({
+          type: "UPDATE_POUR",
+          updates: [
+            undefined,
+            undefined,
+            amountPerPour,
+            amountPerPour,
+            amountPerPour
+          ]
+        })
+        break
+      case "1":
+        dispatch({
+          type: "UPDATE_POUR",
+          updates: [
+            undefined,
+            undefined,
+            total / 4,
+            total / 4,
+            total / 4,
+            total / 4
+          ]
+        })
+        break
+      default:
+        return
+    }
+  }, [strengthValue, amountPerPour])
+
+  const renderLastSixty = () => {
     switch (strengthValue) {
       case "-1":
         return (
           <>
-            <Pour value={total / 2} number={2}>
-              {total / 2} ml
+            <Pour value={pours[2]} number={2}>
+              {pours[2]} ml
             </Pour>
-            <Pour value={total / 2} number={3}>
-              {total / 2} ml
+            <Pour value={pours[3]} number={3}>
+              {pours[3]} ml
             </Pour>
           </>
         )
       case "0":
         return (
           <>
-            <Pour value={total / 3} number={2}>
-              {total / 3} ml
+            <Pour value={pours[2]} number={2}>
+              {pours[2]} ml
             </Pour>
-            <Pour value={total / 3} number={3}>
-              {total / 3} ml
+            <Pour value={pours[3]} number={3}>
+              {pours[3]} ml
             </Pour>
-            <Pour value={total / 3} number={4}>
-              {total / 3} ml
+            <Pour value={pours[4]} number={4}>
+              {pours[4]} ml
             </Pour>
           </>
         )
       case "1":
         return (
           <>
-            <Pour value={total / 4} number={2}>
-              {total / 4} ml
+            <Pour value={pours[2]} number={2}>
+              {pours[2]} ml
             </Pour>
-            <Pour value={total / 4} number={3}>
-              {total / 4} ml
+            <Pour value={pours[3]} number={3}>
+              {pours[3]} ml
             </Pour>
-            <Pour value={total / 4} number={4}>
-              {total / 4} ml
+            <Pour value={pours[4]} number={4}>
+              {pours[4]} ml
             </Pour>
-            <Pour value={total / 4} number={5}>
-              {total / 4} ml
+            <Pour value={pours[5]} number={5}>
+              {pours[5]} ml
             </Pour>
           </>
         )
