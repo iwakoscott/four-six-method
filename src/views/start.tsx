@@ -1,8 +1,8 @@
 import { FC } from "react"
 import { RouteProps } from "react-router-dom"
-import { useEffect, useState } from "react"
 import styled from "styled-components"
 import { PourDiagram } from "../components"
+import { useConfiguration } from "../hooks"
 
 const Wrapper = styled.div`
   max-width: 1440px;
@@ -35,18 +35,7 @@ const SubmitButton = styled.button`
 `
 
 export const StartView: FC<RouteProps> = () => {
-  const [coffeeGrams, setCoffeeGrams] = useState("20")
-  const [amountPerPour, setAmountPerPour] = useState<number>()
-
-  useEffect(() => {
-    if (coffeeGrams !== "") {
-      const amount = Number(coffeeGrams) * 3
-      setAmountPerPour(amount)
-    } else {
-      setAmountPerPour(undefined)
-    }
-  }, [coffeeGrams])
-
+  const { defaultAmountPerPour, setCoffeeGrams } = useConfiguration()
   const submit = (e: any) => {
     e.preventDefault()
     const { coffee } = e.target.elements
@@ -70,13 +59,13 @@ export const StartView: FC<RouteProps> = () => {
           </Label>
           <SubmitButton type="submit">Start</SubmitButton>
         </Row>
-        {amountPerPour && (
+        {defaultAmountPerPour && (
           <div>
             <Output>
-              {amountPerPour} ml per pour, {amountPerPour * 5} ml of water in
-              total
+              {defaultAmountPerPour} ml per pour, {defaultAmountPerPour * 5} ml
+              of water in total
             </Output>
-            <PourDiagram amountPerPour={amountPerPour} />
+            <PourDiagram />
           </div>
         )}
       </form>

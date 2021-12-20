@@ -1,5 +1,6 @@
 import { useState, useEffect, useReducer } from "react"
 import styled from "styled-components"
+import { useConfiguration } from "../../hooks"
 import { Slider } from "../slider"
 import { Pour } from "./_pour"
 
@@ -33,153 +34,56 @@ const LastSixty = styled.div`
   }
 `
 
-export type PourDiagramProps = {
-  amountPerPour: number
-}
-
-function init(amountPerPour: number) {
-  return {
-    0: amountPerPour,
-    1: amountPerPour,
-    2: amountPerPour,
-    3: amountPerPour,
-    4: amountPerPour,
-    5: 0
-  }
-}
-
-type Action =
-  | {
-      type: "ADD_TO_POUR"
-      updates: Array<number>
-    }
-  | { type: "RESET"; amount: number }
-  | { type: "UPDATE_POUR"; updates: Array<number | undefined> }
-
-export const PourDiagram: React.FC<PourDiagramProps> = ({ amountPerPour }) => {
-  const [ASRatioValue, setASRatioValue] = useState("")
-  const [strengthValue, setStrengthValue] = useState("0")
-  const [pours, dispatch] = useReducer(
-    (prev: Record<number, number>, action: Action) => {
-      switch (action.type) {
-        case "UPDATE_POUR":
-          return {
-            ...prev,
-            ...action.updates.reduce((acc, next, idx) => {
-              if (typeof next !== "undefined") {
-                acc[idx] = next
-              }
-              return acc
-            }, {} as Record<number, number>)
-          }
-        case "ADD_TO_POUR":
-          return {
-            ...prev,
-            ...action.updates.reduce((acc, next, idx) => {
-              acc[idx] = amountPerPour + next
-              return acc
-            }, {} as Record<number, number>)
-          }
-        case "RESET":
-          return init(action.amount)
-        default:
-          throw new Error(`Reducer called with invalid action.`)
-      }
-    },
-    init(amountPerPour)
-  )
-
-  useEffect(() => {
-    dispatch({ type: "RESET", amount: amountPerPour })
-    setASRatioValue("")
-    setStrengthValue("0")
-  }, [amountPerPour])
-
-  useEffect(() => {
-    const value = Number(ASRatioValue)
-    dispatch({ type: "ADD_TO_POUR", updates: [value, -1 * value] })
-  }, [ASRatioValue])
-
-  useEffect(() => {
-    const total = amountPerPour * 3
-    switch (strengthValue) {
-      case "-1":
-        dispatch({
-          type: "UPDATE_POUR",
-          updates: [undefined, undefined, total / 2, total / 2]
-        })
-        break
-      case "0":
-        dispatch({
-          type: "UPDATE_POUR",
-          updates: [
-            undefined,
-            undefined,
-            amountPerPour,
-            amountPerPour,
-            amountPerPour
-          ]
-        })
-        break
-      case "1":
-        dispatch({
-          type: "UPDATE_POUR",
-          updates: [
-            undefined,
-            undefined,
-            total / 4,
-            total / 4,
-            total / 4,
-            total / 4
-          ]
-        })
-        break
-      default:
-        return
-    }
-  }, [strengthValue, amountPerPour])
-
+export const PourDiagram: React.FC = () => {
+  const {
+    adjustedPourAmounts,
+    strengthValue,
+    ASRatioValue,
+    setStrengthValue,
+    setASRatioValue,
+    defaultAmountPerPour
+  } = useConfiguration()
   const renderLastSixty = () => {
     switch (strengthValue) {
       case "-1":
         return (
           <>
-            <Pour value={pours[2]} number={2}>
-              {pours[2]} ml
+            <Pour value={adjustedPourAmounts[2]} number={2}>
+              {adjustedPourAmounts[2]} ml
             </Pour>
-            <Pour value={pours[3]} number={3}>
-              {pours[3]} ml
+            <Pour value={adjustedPourAmounts[3]} number={3}>
+              {adjustedPourAmounts[3]} ml
             </Pour>
           </>
         )
       case "0":
         return (
           <>
-            <Pour value={pours[2]} number={2}>
-              {pours[2]} ml
+            <Pour value={adjustedPourAmounts[2]} number={2}>
+              {adjustedPourAmounts[2]} ml
             </Pour>
-            <Pour value={pours[3]} number={3}>
-              {pours[3]} ml
+            <Pour value={adjustedPourAmounts[3]} number={3}>
+              {adjustedPourAmounts[3]} ml
             </Pour>
-            <Pour value={pours[4]} number={4}>
-              {pours[4]} ml
+            <Pour value={adjustedPourAmounts[4]} number={4}>
+              {adjustedPourAmounts[4]} ml
             </Pour>
           </>
         )
       case "1":
         return (
           <>
-            <Pour value={pours[2]} number={2}>
-              {pours[2]} ml
+            <Pour value={adjustedPourAmounts[2]} number={2}>
+              {adjustedPourAmounts[2]} ml
             </Pour>
-            <Pour value={pours[3]} number={3}>
-              {pours[3]} ml
+            <Pour value={adjustedPourAmounts[3]} number={3}>
+              {adjustedPourAmounts[3]} ml
             </Pour>
-            <Pour value={pours[4]} number={4}>
-              {pours[4]} ml
+            <Pour value={adjustedPourAmounts[4]} number={4}>
+              {adjustedPourAmounts[4]} ml
             </Pour>
-            <Pour value={pours[5]} number={5}>
-              {pours[5]} ml
+            <Pour value={adjustedPourAmounts[5]} number={5}>
+              {adjustedPourAmounts[5]} ml
             </Pour>
           </>
         )
@@ -189,9 +93,9 @@ export const PourDiagram: React.FC<PourDiagramProps> = ({ amountPerPour }) => {
   }
 
   const getPourProps = (n: 0 | 1) => {
-    const value = pours[n] / amountPerPour
+    const value = adjustedPourAmounts[n] / defaultAmountPerPour
     return {
-      children: `${pours[n]} ml`,
+      children: `${adjustedPourAmounts[n]} ml`,
       value,
       number: n
     }
@@ -211,8 +115,8 @@ export const PourDiagram: React.FC<PourDiagramProps> = ({ amountPerPour }) => {
         labelEnd="Acidity"
         value={ASRatioValue}
         onChange={(e) => setASRatioValue(e.target.value)}
-        min={-1 * amountPerPour}
-        max={amountPerPour}
+        min={-1 * defaultAmountPerPour}
+        max={defaultAmountPerPour}
       />
       <Slider
         labelStart="Weaker"
