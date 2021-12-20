@@ -1,4 +1,3 @@
-import { useState, useEffect, useReducer } from "react"
 import styled from "styled-components"
 import { useConfiguration } from "../../hooks"
 import { Slider } from "../slider"
